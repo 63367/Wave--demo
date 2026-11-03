@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Wave Démo - Connexion (simulée)</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', Arial, sans-serif; }
+  body { min-height: 100vh; display: flex; align-items: center; justify-content: center;
+         background: linear-gradient(135deg, #1dc8f0 0%, #0aa8d6 100%); }
+  .card { background: #fff; width: 100%; max-width: 380px; border-radius: 24px;
+          padding: 40px 32px; box-shadow: 0 20px 60px rgba(0,60,90,.25); text-align: center; }
+  .logo { width: 72px; height: 72px; margin: 0 auto 16px; border-radius: 50%;
+          background: linear-gradient(135deg, #1dc8f0, #0aa8d6);
+          display: flex; align-items: center; justify-content: center;
+          color: #fff; font-size: 32px; font-weight: bold; }
+  .brand { font-size: 30px; font-weight: 900; color: #1dc8f0; letter-spacing: 1px; margin-bottom: 4px; }
+  h1 { font-size: 20px; color: #123; margin-bottom: 6px; }
+  p.sub { color: #7a8fa0; font-size: 14px; margin-bottom: 28px; }
+  .steps { display: flex; justify-content: center; gap: 8px; margin-bottom: 24px; }
+  .step { width: 28px; height: 5px; border-radius: 3px; background: #e4eef3; transition: background .3s; }
+  .step.active { background: #1dc8f0; }
+  .field { text-align: left; margin-bottom: 20px; }
+  .field label { display: block; font-size: 13px; color: #5a6b78; margin-bottom: 6px; }
+  .field input { width: 100%; padding: 14px 16px; border: 2px solid #e4eef3; border-radius: 14px;
+                 font-size: 15px; outline: none; transition: border-color .2s;
+                 text-align: center; letter-spacing: 2px; }
+  .field input:focus { border-color: #1dc8f0; }
+  .field input.error { border-color: #e74c3c; }
+  .btn { width: 100%; padding: 15px; border: none; border-radius: 14px;
+         background: linear-gradient(135deg, #1dc8f0, #0aa8d6); color: #fff;
+         font-size: 16px; font-weight: bold; cursor: pointer;
+         transition: transform .15s, box-shadow .15s; }
+  .btn:hover { transform: translateY(-2px); }
+  .back { margin-top: 14px; background: none; border: none; color: #7a8fa0;
+          font-size: 14px; cursor: pointer; text-decoration: underline; }
+  .screen { display: none; }
+  .screen.visible { display: block; animation: fade .3s ease; }
+  @keyframes fade { from { opacity: 0; transform: translateX(20px); } to { opacity: 1; transform: none; } }
+  .code-inputs { display: flex; justify-content: center; gap: 10px; margin-bottom: 20px; }
+  .code-inputs input { width: 52px; height: 60px; text-align: center; font-size: 24px;
+                       font-weight: bold; border: 2px solid #e4eef3; border-radius: 14px; outline: none; }
+  .code-inputs input:focus { border-color: #1dc8f0; }
+  .code-inputs input.error { border-color: #e74c3c; }
+  .resend { font-size: 13px; color: #7a8fa0; margin-bottom: 20px; }
+  .resend a { color: #0aa8d6; font-weight: 600; text-decoration: none; cursor: pointer; }
+  .msg { font-size: 13px; font-weight: 600; min-height: 18px; margin-bottom: 12px; }
+  .msg.error { color: #e74c3c; }
+  .msg.ok { color: #2ecc71; }
+</style>
+</head>
+<body>
+  <div class="card">
+    <div class="logo">W</div>
+    <div class="brand">Wave</div>
+    <p class="sub">DÉMO ÉDUCATIVE — aucune donnée n'est collectée</p>
+
+    <div class="steps">
+      <div class="step active" id="s1"></div>
+      <div class="step" id="s2"></div>
+      <div class="step" id="s3"></div>
+    </div>
+
+    <!-- ÉTAPE 1 : Numéro de téléphone -->
+    <div class="screen visible" id="screen1">
+      <h1>Bienvenue</h1>
+      <p class="sub">Entre ton numéro de téléphone</p>
+      <div class="field">
+        <label for="tel">Numéro de téléphone</label>
+        <input type="tel" id="tel" placeholder="+225 05 123 45 67">
+      </div>
+      <p class="msg" id="msg1"></p>
+      <button class="btn" onclick="goStep(2)">Suivant</button>
+    </div>
+
+    <!-- ÉTAPE 2 : Code PIN -->
+    <div class="screen" id="screen2">
+      <h1>Code secret</h1>
+      <p class="sub">Entre ton code PIN</p>
+      <div class="field">
+        <input type="password" id="pin" placeholder="••••" maxlength="4" inputmode="numeric">
+      </div>
+      <p class="msg" id="msg2"></p>
+      <button class="btn" onclick="goStep(3)">Suivant</button>
+      <button class="back" onclick="goStep(1)">← Retour</button>
+    </div>
+
+    <!-- ÉTAPE 3 : Code de vérification -->
+    <div class="screen" id="screen3">
+      <h1>Entre le code envoyé par SMS</h1>
+      <p class="sub">au numéro <span id="telAffiche"></span></p>
+      <div class="code-inputs">
+        <input type="text" maxlength="1" inputmode="numeric" oninput="moveNext(this)">
+        <input type="text" maxlength="1" inputmode="numeric" oninput="moveNext(this)">
+        <input type="text" maxlength="1" inputmode="numeric" oninput="moveNext(this)">
+        <input type="text" maxlength="1" inputmode="numeric">
+      </div>
+      <p class="resend">Tu n'as rien reçu ? <a onclick="renvoyer()">Renvoyer le code</a></p>
+      <p class="msg" id="msg3"></p>
+      <button class="btn" onclick="valider()">Se connecter</button>
+      <button class="back" onclick="goStep(2)">← Retour</button>
+    </div>
+  </div>
+
+<script>
+  const CODE_SMS_VALIDE = '1234'; // en démo : le "SMS" contient ce code. Change-le si tu veux.
+
+  function goStep(n) {
+    // ===== VALIDATION AVANT DE PASSER À L'ÉTAPE SUIVANTE =====
+    if (n === 2) {
+      const tel = document.getElementById('tel').value.trim();
+      if (!tel) {                                  // champ vide → refus
+        afficherErreur('msg1', 'Veuillez d\'abord saisir votre numéro de téléphone.');
+        document.getElementById('tel').classList.add('error');
+        return;
+      }
+      if (!/^\+?[0-9 ]{8,}$/.test(tel)) {          // format basique
+        afficherErreur('msg1', 'Numéro invalide. Exemple : +225 05 123 45 67');
+        document.getElementById('tel').classList.add('error');
+        return;
+      }
+      document.getElementById('tel').classList.remove('error');
+      document.getElementById('telAffiche').textContent = tel;
+    }
+
+    if (n === 3) {
+      const pin = document.getElementById('pin').value.trim();
+      if (!pin) {                                  // champ vide → refus
+        afficherErreur('msg2', 'Veuillez d\'abord saisir votre code PIN.');
+        document.getElementById('pin').classList.add('error');
+        return;
+      }
+      if (!/^\d{4}$/.test(pin)) {                  // 4 chiffres obligatoires
+        afficherErreur('msg2', 'Le code PIN doit contenir 4 chiffres.');
+        document.getElementById('pin').classList.add('error');
+        return;
+      }
+      document.getElementById('pin').classList.remove('error');
+    }
+
+    // Navigation
+    for (let i = 1; i <= 3; i++) {
+      document.getElementById('screen' + i).classList.toggle('visible', i === n);
+      document.getElementById('s' + i).classList.toggle('active', i <= n);
+    }
+    const input = document.querySelector('#screen' + n + ' input');
+    if (input) input.focus();
+  }
+
+  function valider() {
+    const pin = document.getElementById('pin').value.trim();
+    const boxes = document.querySelectorAll('.code-inputs input');
+    let otp = '';
+    boxes.forEach(b => otp += b.value);
+
+    // ===== 1. Champs vides → refus =====
+    if (!otp || boxes[0].value === '' || boxes[1].value === '' ||
+        boxes[2].value === '' || boxes[3].value === '') {
+      afficherErreur('msg3', 'Veuillez d\'abord saisir le code de vérification reçu par SMS.');
+      boxes.forEach(b => { if (!b.value) b.classList.add('error'); });
+      return;
+    }
+    boxes.forEach(b => b.classList.remove('error'));
+
+    // ===== 2. OTP identique au PIN → refus =====
+    if (otp === pin) {
+      afficherErreur('msg3', 'Le code de vérification doit être différent de votre code PIN.');
+      boxes.forEach(b => b.classList.add('error'));
+      return;
+    }
+
+    // ===== 3. Code SMS incorrect → refus =====
+    if (otp !== CODE_SMS_VALIDE) {
+      afficherErreur('msg3', 'Code incorrect. En démo, le code SMS est : ' + CODE_SMS_VALIDE);
+      boxes.forEach(b => b.classList.add('error'));
+      return;
+    }
+
+    // ===== Succès (simulé, aucune donnée envoyée nulle part) =====
+    const msg = document.getElementById('msg3');
+    msg.className = 'msg ok';
+    msg.textContent = 'Connexion simulée réussie ✔';
+    setTimeout(() => {
+      alert('DÉMO TERMINÉE : dans une vraie application, l\'OTP serait vérifié côté serveur.');
+      location.reload();
+    }, 1200);
+  }
+
+  function renvoyer() {
+    const msg = document.getElementById('msg3');
+    msg.className = 'msg ok';
+    msg.textContent = 'Nouveau code envoyé (démo : code = ' + CODE_SMS_VALIDE + ')';
+  }
+
+  function afficherErreur(id, texte) {
+    const msg = document.getElementById(id);
+    msg.className = 'msg error';
+    msg.textContent = texte;
+  }
+
+  function moveNext(el) {
+    el.value = el.value.replace(/\D/g, '');
+    el.classList.remove('error');
+    if (el.value.length === 1 && el.nextElementSibling) el.nextElementSibling.focus();
+  }
+</script>
+</body>
+</html>
